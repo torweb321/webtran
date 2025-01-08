@@ -1,9 +1,12 @@
-import type { Metadata } from 'next'
 import './globals.css'
+import { Inter } from 'next/font/google'
 
-export const metadata: Metadata = {
+const inter = Inter({ subsets: ['latin'] })
+
+export const metadata = {
   title: 'File Translation App',
-  description: 'Translate your files using DeepSeek API',
+  description: 'Translate your documents with ease',
+  metadataBase: new URL('https://torweb321.github.io/webtran'),
 }
 
 export default function RootLayout({
@@ -13,7 +16,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50">{children}</body>
+      <body className={inter.className}>{children}</body>
     </html>
   )
 }

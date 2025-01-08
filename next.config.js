@@ -2,6 +2,8 @@
 const nextConfig = {
   output: 'export',
   basePath: '/webtran',
+  assetPrefix: '/webtran/',
+  trailingSlash: true,
   images: {
     unoptimized: true,
   },
@@ -11,10 +13,6 @@ const nextConfig = {
   webpack: (config) => {
     config.externals = [...(config.externals || []), 'canvas', 'jsdom'];
     return config;
-  },
-  api: {
-    bodyParser: false,
-    externalResolver: true,
   },
 }
 
