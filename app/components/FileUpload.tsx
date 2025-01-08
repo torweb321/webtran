@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { API_URL } from '../config'
 
 const SUPPORTED_LANGUAGES = {
   'en': 'English',
@@ -71,7 +72,7 @@ export default function FileUpload() {
       formData.append('file', file)
       formData.append('targetLang', targetLang)
 
-      const response = await fetch('/webtran/api/translate', {
+      const response = await fetch(`${API_URL}/translate`, {
         method: 'POST',
         body: formData,
       })
