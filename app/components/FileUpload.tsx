@@ -71,7 +71,7 @@ export default function FileUpload() {
       formData.append('file', file)
       formData.append('targetLang', targetLang)
 
-      const response = await fetch('/api/translate', {
+      const response = await fetch('/webtran/api/translate', {
         method: 'POST',
         body: formData,
       })

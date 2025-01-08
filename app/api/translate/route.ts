@@ -1,9 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import formidable from 'formidable'
-import fs from 'fs'
-import pdf from 'pdf-parse'
-import mammoth from 'mammoth'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,21 +12,8 @@ export const config = {
   },
 }
 
-async function extractTextFromFile(file: formidable.File): Promise<string> {
-  const fileType = file.mimetype || ''
-  const filePath = file.filepath
-  const fileContent = await fs.promises.readFile(filePath)
-
-  if (fileType.includes('pdf')) {
-    const pdfData = await pdf(fileContent)
-    return pdfData.text
-  } else if (fileType.includes('msword') || fileType.includes('wordprocessingml')) {
-    const result = await mammoth.extractRawText({ buffer: fileContent })
-    return result.value
-  } else {
-    // Assume it's a text file
-    return fileContent.toString()
-  }
+async function extractTextFromFile(file: File): Promise<string> {
+  return await file.text()
 }
 
 async function translateText(text: string, targetLang: string): Promise<string> {
@@ -66,31 +49,18 @@ async function translateText(text: string, targetLang: string): Promise<string> 
 
 export async function POST(req: NextRequest) {
   try {
-    const form = formidable({})
-    const [fields, files] = await new Promise((resolve, reject) => {
-      const chunks: any[] = []
-      req.body?.pipeThrough(new TransformStream({
-        transform(chunk, controller) {
-          chunks.push(chunk)
-          controller.enqueue(chunk)
-        }
-      }))
-      
-      form.parse(new Blob(chunks), (err, fields, files) => {
-        if (err) reject(err)
-        else resolve([fields, files])
-      })
-    })
+    const formData = await req.formData()
+    const file = formData.get('file') as File
+    const targetLang = formData.get('targetLang') as string || 'en'
 
-    if (!files.file || Array.isArray(files.file)) {
+    if (!file) {
       return NextResponse.json(
         { error: 'No file uploaded' },
         { status: 400 }
       )
     }
 
-    const targetLang = fields.targetLang?.[0] || 'en'
-    const text = await extractTextFromFile(files.file)
+    const text = await extractTextFromFile(file)
     const translation = await translateText(text, targetLang)
 
     // Store in Supabase
@@ -101,7 +71,7 @@ export async function POST(req: NextRequest) {
           original_text: text,
           translated_text: translation,
           target_language: targetLang,
-          file_name: files.file.originalFilename
+          file_name: file.name
         }
       ])
 
