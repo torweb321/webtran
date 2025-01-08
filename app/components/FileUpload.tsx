@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { API_URL } from '../config'
 import { Document, Packer, Paragraph, TextRun } from 'docx'
-import { marked } from 'marked'
 
 const SUPPORTED_LANGUAGES = {
   'en': 'English',
@@ -87,23 +86,19 @@ export default function FileUpload() {
 
     let blob: Blob
     let extension: string
-    let mimeType: string
 
     switch (downloadFormat) {
       case 'docx':
         blob = await convertToDocx(result)
         extension = '.docx'
-        mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         break
       case 'md':
         blob = new Blob([result], { type: 'text/markdown' })
         extension = '.md'
-        mimeType = 'text/markdown'
         break
       default:
         blob = new Blob([result], { type: 'text/plain' })
         extension = '.txt'
-        mimeType = 'text/plain'
     }
 
     const url = window.URL.createObjectURL(blob)
