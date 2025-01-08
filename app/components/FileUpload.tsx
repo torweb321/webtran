@@ -2,6 +2,8 @@
 
 import { useState } from 'react'
 import { API_URL } from '../config'
+import { Document, Packer, Paragraph, TextRun } from 'docx'
+import { marked } from 'marked'
 
 const SUPPORTED_LANGUAGES = {
   'en': 'English',
@@ -25,12 +27,19 @@ const SUPPORTED_FILE_TYPES = [
 
 const SUPPORTED_EXTENSIONS = ['.txt', '.pdf', '.doc', '.docx', '.md']
 
+const DOWNLOAD_FORMATS = [
+  { value: 'txt', label: 'Text (.txt)' },
+  { value: 'md', label: 'Markdown (.md)' },
+  { value: 'docx', label: 'Word (.docx)' }
+]
+
 export default function FileUpload() {
   const [file, setFile] = useState<File | null>(null)
   const [translating, setTranslating] = useState(false)
   const [result, setResult] = useState('')
   const [error, setError] = useState('')
   const [targetLang, setTargetLang] = useState('en')
+  const [downloadFormat, setDownloadFormat] = useState('txt')
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -46,17 +55,61 @@ export default function FileUpload() {
       setFile(selectedFile)
       setError('')
       setResult('')
+
+      // Set default download format based on input file type
+      if (fileName.endsWith('.md')) {
+        setDownloadFormat('md')
+      } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
+        setDownloadFormat('docx')
+      } else {
+        setDownloadFormat('txt')
+      }
     }
   }
 
-  const handleDownload = () => {
+  const convertToDocx = async (text: string): Promise<Blob> => {
+    const doc = new Document({
+      sections: [{
+        properties: {},
+        children: text.split('\n').map(line => 
+          new Paragraph({
+            children: [new TextRun(line)]
+          })
+        )
+      }]
+    })
+
+    return await Packer.toBlob(doc)
+  }
+
+  const handleDownload = async () => {
     if (!result) return
 
-    const blob = new Blob([result], { type: 'text/plain' })
+    let blob: Blob
+    let extension: string
+    let mimeType: string
+
+    switch (downloadFormat) {
+      case 'docx':
+        blob = await convertToDocx(result)
+        extension = '.docx'
+        mimeType = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        break
+      case 'md':
+        blob = new Blob([result], { type: 'text/markdown' })
+        extension = '.md'
+        mimeType = 'text/markdown'
+        break
+      default:
+        blob = new Blob([result], { type: 'text/plain' })
+        extension = '.txt'
+        mimeType = 'text/plain'
+    }
+
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `translated_${file?.name.replace(/\.[^/.]+$/, '')}.txt`
+    a.download = `translated_${file?.name.replace(/\.[^/.]+$/, '')}${extension}`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
@@ -194,12 +247,30 @@ export default function FileUpload() {
                 {result}
               </div>
             </div>
-            <button
-              onClick={handleDownload}
-              className="mt-4 w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
-            >
-              Download Translation
-            </button>
+
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Download Format
+              </label>
+              <select
+                value={downloadFormat}
+                onChange={(e) => setDownloadFormat(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+              >
+                {DOWNLOAD_FORMATS.map(format => (
+                  <option key={format.value} value={format.value}>
+                    {format.label}
+                  </option>
+                ))}
+              </select>
+              
+              <button
+                onClick={handleDownload}
+                className="w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+              >
+                Download Translation
+              </button>
+            </div>
           </div>
         )}
       </div>
