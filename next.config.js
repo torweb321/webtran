@@ -8,7 +8,9 @@ const nextConfig = {
     unoptimized: true,
   },
   experimental: {
-    serverActions: true,
+    serverActions: {
+      allowedOrigins: ['localhost:3000', 'webtran-worker.chrissy113.workers.dev']
+    }
   },
   webpack: (config) => {
     config.externals = [...(config.externals || []), 'canvas', 'jsdom'];
