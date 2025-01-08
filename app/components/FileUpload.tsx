@@ -72,14 +72,19 @@ export default function FileUpload() {
       formData.append('file', file)
       formData.append('targetLang', targetLang)
 
+      console.log('Uploading file:', file.name)
+      console.log('Target language:', targetLang)
+
       const response = await fetch(`${API_URL}/translate`, {
         method: 'POST',
         body: formData,
       })
 
+      console.log('Response status:', response.status)
       const data = await response.json()
       
       if (!response.ok) {
+        console.error('Translation failed:', data)
         throw new Error(data.error || data.details || 'Translation failed')
       }
 
@@ -102,7 +107,7 @@ export default function FileUpload() {
           <select
             value={targetLang}
             onChange={(e) => setTargetLang(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {Object.entries(SUPPORTED_LANGUAGES).map(([code, name]) => (
               <option key={code} value={code}>
@@ -112,61 +117,88 @@ export default function FileUpload() {
           </select>
         </div>
 
-        <label
-          htmlFor="file-upload"
-          className="w-full h-32 flex flex-col items-center justify-center border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
-        >
-          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-            <p className="mb-2 text-sm text-gray-500">
-              <span className="font-semibold">Click to upload</span> or drag and drop
-            </p>
-            <p className="text-xs text-gray-500">
-              Supported formats: .txt, .pdf, .doc, .docx
-            </p>
-          </div>
-          <input
-            id="file-upload"
-            type="file"
-            className="hidden"
-            onChange={handleFileChange}
-            accept=".txt,.pdf,.doc,.docx"
-          />
-        </label>
+        <div className="w-full">
+          <label
+            htmlFor="file-upload"
+            className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none"
+          >
+            <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md hover:border-blue-500">
+              <div className="space-y-1 text-center">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  stroke="currentColor"
+                  fill="none"
+                  viewBox="0 0 48 48"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
+                    strokeWidth={2}
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <div className="flex text-sm text-gray-600">
+                  <span>Click to upload</span>
+                  <input
+                    id="file-upload"
+                    name="file-upload"
+                    type="file"
+                    className="sr-only"
+                    onChange={handleFileChange}
+                    accept=".txt,.pdf,.doc,.docx"
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Supported formats: .txt, .pdf, .doc, .docx
+                </p>
+              </div>
+            </div>
+          </label>
+        </div>
 
         {file && (
-          <div className="text-sm text-gray-500">
-            Selected file: {file.name}
+          <div className="w-full text-center">
+            <p className="text-sm text-gray-600">
+              Selected file: {file.name}
+            </p>
+          </div>
+        )}
+
+        {error && (
+          <div className="w-full text-center">
+            <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
 
         <button
           onClick={handleUpload}
           disabled={!file || translating}
-          className="w-full px-4 py-2 text-white bg-blue-500 rounded-md hover:bg-blue-600 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+          className={`w-full px-4 py-2 rounded-md text-white font-medium ${
+            !file || translating
+              ? 'bg-gray-400 cursor-not-allowed'
+              : 'bg-blue-500 hover:bg-blue-600'
+          }`}
         >
           {translating ? 'Translating...' : 'Translate'}
         </button>
 
-        {error && (
-          <div className="w-full p-4 bg-red-50 border border-red-200 rounded-lg text-red-600">
-            {error}
-          </div>
-        )}
-
         {result && (
-          <div className="w-full mt-4">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-semibold">Translation Result:</h3>
-              <button
-                onClick={handleDownload}
-                className="px-3 py-1 text-sm text-blue-600 hover:text-blue-700 focus:outline-none"
-              >
-                Download
-              </button>
+          <div className="w-full">
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Translation Result
+              </label>
+              <div className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 whitespace-pre-wrap">
+                {result}
+              </div>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg whitespace-pre-wrap border border-gray-200">
-              {result}
-            </div>
+            <button
+              onClick={handleDownload}
+              className="mt-4 w-full px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+            >
+              Download Translation
+            </button>
           </div>
         )}
       </div>
