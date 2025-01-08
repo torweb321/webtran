@@ -14,8 +14,14 @@ const SUPPORTED_LANGUAGES = {
   'ar': 'Arabic'
 }
 
-const SUPPORTED_FILE_TYPES = ['text/plain', 'application/pdf']
-const SUPPORTED_EXTENSIONS = ['.txt', '.pdf']
+const SUPPORTED_FILE_TYPES = [
+  'text/plain',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+]
+
+const SUPPORTED_EXTENSIONS = ['.txt', '.pdf', '.doc', '.docx']
 
 export default function FileUpload() {
   const [file, setFile] = useState<File | null>(null)
@@ -31,7 +37,7 @@ export default function FileUpload() {
       
       if (!SUPPORTED_FILE_TYPES.includes(selectedFile.type) &&
           !SUPPORTED_EXTENSIONS.some(ext => fileName.endsWith(ext))) {
-        setError('Please upload a supported file type (.txt, .pdf)')
+        setError('Please upload a supported file type (.txt, .pdf, .doc, .docx)')
         return
       }
       
@@ -114,7 +120,7 @@ export default function FileUpload() {
               <span className="font-semibold">Click to upload</span> or drag and drop
             </p>
             <p className="text-xs text-gray-500">
-              Supported formats: .txt, .pdf
+              Supported formats: .txt, .pdf, .doc, .docx
             </p>
           </div>
           <input
@@ -122,7 +128,7 @@ export default function FileUpload() {
             type="file"
             className="hidden"
             onChange={handleFileChange}
-            accept=".txt,.pdf"
+            accept=".txt,.pdf,.doc,.docx"
           />
         </label>
 

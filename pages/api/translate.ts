@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 import formidable from 'formidable'
 import pdfParse from 'pdf-parse'
+import mammoth from 'mammoth'
 import fs from 'fs'
 
 export const config = {
@@ -42,6 +43,10 @@ export default async function handler(
         const dataBuffer = fs.readFileSync(file.filepath)
         const pdfData = await pdfParse(dataBuffer)
         text = pdfData.text
+      } else if (fileName.endsWith('.doc') || fileName.endsWith('.docx')) {
+        const buffer = fs.readFileSync(file.filepath)
+        const result = await mammoth.extractRawText({ buffer })
+        text = result.value
       } else {
         return res.status(400).json({ error: 'Unsupported file type' })
       }
