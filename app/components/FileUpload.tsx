@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { API_URL } from '../config'
 import { Document, Packer, Paragraph, TextRun } from 'docx'
+import PDFDocument from 'pdfkit'
 
 const SUPPORTED_LANGUAGES = {
   'en': 'English',
@@ -29,7 +30,8 @@ const SUPPORTED_EXTENSIONS = ['.txt', '.pdf', '.doc', '.docx', '.md']
 const DOWNLOAD_FORMATS = [
   { value: 'txt', label: 'Text (.txt)' },
   { value: 'md', label: 'Markdown (.md)' },
-  { value: 'docx', label: 'Word (.docx)' }
+  { value: 'docx', label: 'Word (.docx)' },
+  { value: 'pdf', label: 'PDF (.pdf)' }
 ]
 
 export default function FileUpload() {
@@ -60,6 +62,8 @@ export default function FileUpload() {
         setDownloadFormat('md')
       } else if (fileName.endsWith('.docx') || fileName.endsWith('.doc')) {
         setDownloadFormat('docx')
+      } else if (fileName.endsWith('.pdf')) {
+        setDownloadFormat('pdf')
       } else {
         setDownloadFormat('txt')
       }
@@ -81,6 +85,30 @@ export default function FileUpload() {
     return await Packer.toBlob(doc)
   }
 
+  const convertToPdf = (text: string): Promise<Blob> => {
+    return new Promise((resolve) => {
+      const chunks: Buffer[] = []
+      const doc = new PDFDocument()
+
+      // Collect PDF data chunks
+      doc.on('data', chunks.push.bind(chunks))
+      doc.on('end', () => {
+        const pdfBlob = new Blob([Buffer.concat(chunks)], { type: 'application/pdf' })
+        resolve(pdfBlob)
+      })
+
+      // Add text content
+      doc.fontSize(12)
+      text.split('\n').forEach(line => {
+        doc.text(line.trim())
+        doc.moveDown()
+      })
+
+      // Finalize the PDF
+      doc.end()
+    })
+  }
+
   const handleDownload = async () => {
     if (!result) return
 
@@ -95,6 +123,10 @@ export default function FileUpload() {
       case 'md':
         blob = new Blob([result], { type: 'text/markdown' })
         extension = '.md'
+        break
+      case 'pdf':
+        blob = await convertToPdf(result)
+        extension = '.pdf'
         break
       default:
         blob = new Blob([result], { type: 'text/plain' })
