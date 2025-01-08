@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { API_URL } from '../config'
 import { Document, Packer, Paragraph, TextRun } from 'docx'
-import PDFDocument from 'pdfkit'
+import { jsPDF } from 'jspdf'
 
 const SUPPORTED_LANGUAGES = {
   'en': 'English',
@@ -87,25 +87,25 @@ export default function FileUpload() {
 
   const convertToPdf = (text: string): Promise<Blob> => {
     return new Promise((resolve) => {
-      const chunks: Buffer[] = []
-      const doc = new PDFDocument()
+      const doc = new jsPDF()
+      const pageHeight = doc.internal.pageSize.height
+      const margin = 10
+      let cursorY = margin
 
-      // Collect PDF data chunks
-      doc.on('data', chunks.push.bind(chunks))
-      doc.on('end', () => {
-        const pdfBlob = new Blob([Buffer.concat(chunks)], { type: 'application/pdf' })
-        resolve(pdfBlob)
+      // Split text into lines and add to PDF
+      const lines = doc.splitTextToSize(text, doc.internal.pageSize.width - 2 * margin)
+      
+      lines.forEach((line: string) => {
+        if (cursorY > pageHeight - margin) {
+          doc.addPage()
+          cursorY = margin
+        }
+        doc.text(line, margin, cursorY)
+        cursorY += 7 // Line height
       })
 
-      // Add text content
-      doc.fontSize(12)
-      text.split('\n').forEach(line => {
-        doc.text(line.trim())
-        doc.moveDown()
-      })
-
-      // Finalize the PDF
-      doc.end()
+      const pdfBlob = new Blob([doc.output('blob')], { type: 'application/pdf' })
+      resolve(pdfBlob)
     })
   }
 
