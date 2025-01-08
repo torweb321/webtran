@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@netlify/plugin-nextjs": "^5.9.3",
     "@types/node": "^20",
     "@types/pdfkit": "^0.13.8",
     "@types/react": "^19",
