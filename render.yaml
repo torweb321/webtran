@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: webtran
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_VERSION
+        value: 18.17.0
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        value: https://jeasqauzirlghdkbsbkq.supabase.co
+      - key: NEXT_PUBLIC_SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9
+      - key: DEEPSEEK_API_KEY
+        value: sk-7fbf10c7cad84884962c35208d94bf58
